@@ -15,5 +15,5 @@
 Here is an example call:
 
 ```
-  python3 stylize.py --content-dir '/Users/vignavramesh/Documents/sample/' --style-dir '/Users/vignavramesh/Downloads/train/' --alpha 1 --content-size 0 --style-size 0
+python3 stylize.py --content-dir '/Users/vignavramesh/Documents/sample/' --style-dir '/Users/vignavramesh/Downloads/train/' --alpha 1 --content-size 0 --style-size 0
 ```

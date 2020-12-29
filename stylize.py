@@ -10,6 +10,8 @@ import torch.nn as nn
 import torchvision.transforms
 from torchvision.utils import save_image
 from tqdm import tqdm
+import numpy as np
+import cv2 as cv
 
 parser = argparse.ArgumentParser(description='This script applies the AdaIN style transfer method to arbitrary datasets.')
 parser.add_argument('--content-dir', type=str,
@@ -116,14 +118,15 @@ def main():
                 for style_path in random.sample(styles, args.num_styles):
                     style_img = Image.open(style_path).convert('RGB')
 
-                    content = content_tf(content_img)
-                    
                     gamma = 1.3
                     lookUpTable = np.empty((1,256), np.uint8)
                     for i in range(256):
                         lookUpTable[0,i] = np.clip(pow(i / 255.0, gamma) * 255.0, 0, 255)
-                    content = cv.LUT(np.uint8(content), lookUpTable)
-                    
+                    content_img = cv.LUT(np.uint8(content_img), lookUpTable)
+                    content_img = Image.fromarray(content_img, 'RGB')
+
+                    content = content_tf(content_img)
+
                     style = style_tf(style_img)
                     style = style.to(device).unsqueeze(0)
                     content = content.to(device).unsqueeze(0)

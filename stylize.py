@@ -117,6 +117,13 @@ def main():
                     style_img = Image.open(style_path).convert('RGB')
 
                     content = content_tf(content_img)
+                    
+                    gamma = 1.3
+                    lookUpTable = np.empty((1,256), np.uint8)
+                    for i in range(256):
+                        lookUpTable[0,i] = np.clip(pow(i / 255.0, gamma) * 255.0, 0, 255)
+                    content = cv.LUT(np.uint8(content), lookUpTable)
+                    
                     style = style_tf(style_img)
                     style = style.to(device).unsqueeze(0)
                     content = content.to(device).unsqueeze(0)

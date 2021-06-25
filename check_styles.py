@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import csv
 import argparse
 from function import adaptive_instance_normalization
 import net
@@ -12,9 +13,13 @@ from torchvision.utils import save_image
 from tqdm import tqdm
 import numpy as np
 import cv2 as cv
+import os
 
 CSVDIR = '/scratch/users/rvignav/train_info.csv'
-# CSVDIR = '/Users/vignavramesh/Research/train_info.csv'
+
+with open(CSVDIR, mode='r') as infile:
+    reader = csv.reader(infile)
+    d = {rows[0]: [rows[3], rows[4], rows[1]] for rows in reader}
 
 parser = argparse.ArgumentParser(
     description='This script applies the AdaIN style transfer method to arbitrary datasets.')
@@ -62,18 +67,12 @@ def style_transfer(vgg, decoder, content, style, alpha=1.0):
     return decoder(feat)
 
 
-def main():
-    import csv
-
-    with open(CSVDIR, mode='r') as infile:
-        reader = csv.reader(infile)
-        d = {rows[0]: [rows[3], rows[4], rows[1]] for rows in reader}
-
+def main(sdir):
     args = parser.parse_args()
 
     # set content and style directories
     content_dir = Path(args.content_dir)
-    style_dir = Path(args.style_dir)
+    style_dir = Path(sdir)
     style_dir = style_dir.resolve()
     output_dir = Path(args.output_dir)
     output_dir = output_dir.resolve()
@@ -127,7 +126,7 @@ def main():
     skipped_imgs = []
 
     # actual style transfer as in AdaIN
-    with tqdm(total=len(styles)) as pbar:
+    with tqdm(total=len(content_paths)) as pbar:
         for content_path in content_paths:
             try:
                 content_img = Image.open(content_path).convert('RGB')
@@ -164,11 +163,12 @@ def main():
 
                     out_filename = c[0] + "_" + c[1] + \
                         "_" + c[2] + "_" + '.jpeg'
+
                     output_name = out_dir.joinpath(out_filename)
 
                     # default image padding is 2.
                     save_image(output, output_name, padding=0)
-                    pbar.update(1)
+
                     style_img.close()
                 content_img.close()
             except OSError as e:
@@ -181,6 +181,8 @@ def main():
                       (content_path))
                 skipped_imgs.append(content_path)
                 continue
+            finally:
+                pbar.update(1)
 
     if(len(skipped_imgs) > 0):
         with open(output_dir.joinpath('skipped_imgs.txt'), 'w') as f:
@@ -189,4 +191,11 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    from shutil import copyfile
+    import glob
+    fnames = glob.glob('/scratch/users/rvignav/style-imgs/*')
+    for i, file in enumerate(fnames):
+        os.mkdir('/scratch/users/rvignav/try/' + str(i))
+        name = file[file.rindex('/'):]
+        copyfile(file, '/scratch/users/rvignav/try/' + str(i) + '/' + name)
+        main('/scratch/users/rvignav/try/' + str(i))

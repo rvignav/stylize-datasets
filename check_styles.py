@@ -127,7 +127,7 @@ def main():
     skipped_imgs = []
 
     # actual style transfer as in AdaIN
-    with tqdm(total=len(content_paths)) as pbar:
+    with tqdm(total=len(styles)) as pbar:
         for content_path in content_paths:
             try:
                 content_img = Image.open(content_path).convert('RGB')
@@ -168,6 +168,7 @@ def main():
 
                     # default image padding is 2.
                     save_image(output, output_name, padding=0)
+                    pbar.update(1)
                     style_img.close()
                 content_img.close()
             except OSError as e:
@@ -180,8 +181,6 @@ def main():
                       (content_path))
                 skipped_imgs.append(content_path)
                 continue
-            finally:
-                pbar.update(1)
 
     if(len(skipped_imgs) > 0):
         with open(output_dir.joinpath('skipped_imgs.txt'), 'w') as f:
